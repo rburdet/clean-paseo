@@ -2,7 +2,7 @@
   "id": "clean-paseo",
   "name": "Clean Paseo",
   "description": "Bulk-archive workspaces from one screen, sorted by last activity.",
-  "media": [],
+  "media": ["assets/screenshot.png"],
   "requirements": {
     "paseo": ">=0.15.0"
   }
