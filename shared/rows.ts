@@ -63,14 +63,14 @@ export function sortRows(rows: WorkspaceRow[], dir: SortDirection): WorkspaceRow
 }
 
 export function formatActivity(activityMs: number | null, nowMs: number): string {
-  if (activityMs === null) return "sin actividad";
+  if (activityMs === null) return "no activity";
   const seconds = Math.floor((nowMs - activityMs) / 1000);
-  if (seconds < 60) return "recién";
+  if (seconds < 60) return "just now";
   const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `hace ${minutes} min`;
+  if (minutes < 60) return `${minutes} min ago`;
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `hace ${hours} h`;
-  return `hace ${Math.floor(hours / 24)} d`;
+  if (hours < 24) return `${hours} h ago`;
+  return `${Math.floor(hours / 24)} d ago`;
 }
 
 export function pruneSelection(selected: ReadonlySet<string>, rows: WorkspaceRow[]): Set<string> {

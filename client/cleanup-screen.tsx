@@ -110,11 +110,11 @@ export function CleanupScreen({ theme, layout }: PluginScreenProps) {
         setProgress,
       );
       if (outcome.failed.length > 0) {
-        toast.show(`Archivados ${outcome.archived.length}, fallaron ${outcome.failed.length}`, {
+        toast.show(`Archived ${outcome.archived.length}, failed ${outcome.failed.length}`, {
           variant: "warning",
         });
       } else {
-        toast.show(`Archivados ${outcome.archived.length}`);
+        toast.show(`Archived ${outcome.archived.length}`);
       }
       setFailures(
         outcome.failed.map((f) => ({ id: f.id, label: labels.get(f.id) ?? f.id, error: f.error })),
@@ -172,7 +172,7 @@ export function CleanupScreen({ theme, layout }: PluginScreenProps) {
     <View style={styles.screen}>
       <View style={styles.header}>
         <Text style={styles.title}>
-          {`${selectable.length} workspaces activos${archivingCount > 0 ? ` (${archivingCount} archivando)` : ""}`}
+          {`${selectable.length} active workspaces${archivingCount > 0 ? ` (${archivingCount} archiving)` : ""}`}
         </Text>
         <View style={styles.headerRow}>
           <Pressable
@@ -181,7 +181,7 @@ export function CleanupScreen({ theme, layout }: PluginScreenProps) {
             onPress={() => setDir((d) => (d === "oldest-first" ? "newest-first" : "oldest-first"))}
           >
             <Text style={styles.text}>
-              {dir === "oldest-first" ? "Más viejos primero" : "Más recientes primero"}
+              {dir === "oldest-first" ? "Oldest first" : "Newest first"}
             </Text>
           </Pressable>
           <Pressable
@@ -190,7 +190,7 @@ export function CleanupScreen({ theme, layout }: PluginScreenProps) {
             style={[styles.secondaryButton, running ? styles.disabled : null]}
             onPress={() => void query.refetch()}
           >
-            <Text style={styles.text}>Refrescar</Text>
+            <Text style={styles.text}>Refresh</Text>
           </Pressable>
           <Pressable
             accessibilityRole="button"
@@ -198,7 +198,7 @@ export function CleanupScreen({ theme, layout }: PluginScreenProps) {
             style={[styles.secondaryButton, running || selectable.length === 0 ? styles.disabled : null]}
             onPress={toggleAll}
           >
-            <Text style={styles.text}>{allSelected ? "Deseleccionar todos" : "Seleccionar todos"}</Text>
+            <Text style={styles.text}>{allSelected ? "Deselect all" : "Select all"}</Text>
           </Pressable>
           <Pressable
             accessibilityRole="button"
@@ -207,16 +207,16 @@ export function CleanupScreen({ theme, layout }: PluginScreenProps) {
             style={[styles.primaryButton, n === 0 || running ? styles.disabled : null]}
             onPress={() => setConfirmOpen(true)}
           >
-            <Text style={styles.primaryText}>{`Archivar ${n}`}</Text>
+            <Text style={styles.primaryText}>{`Archive ${n}`}</Text>
           </Pressable>
         </View>
-        {progress ? <Text style={styles.text}>{`Archivando ${Math.min(progress.done + 1, progress.total)}/${progress.total}…`}</Text> : null}
+        {progress ? <Text style={styles.text}>{`Archiving ${Math.min(progress.done + 1, progress.total)}/${progress.total}…`}</Text> : null}
         {query.isError ? (
           <Text style={styles.danger}>
-            {`No se pudo cargar: ${query.error instanceof Error ? query.error.message : String(query.error)}`}
+            {`Could not load: ${query.error instanceof Error ? query.error.message : String(query.error)}`}
           </Text>
         ) : null}
-        {refreshFailed ? <Text style={styles.danger}>No se pudo refrescar la lista</Text> : null}
+        {refreshFailed ? <Text style={styles.danger}>Could not refresh the list</Text> : null}
         {failures.length > 0 ? (
           <View>
             <Text style={styles.danger}>{`No se pudieron archivar ${failures.length}:`}</Text>
@@ -235,14 +235,14 @@ export function CleanupScreen({ theme, layout }: PluginScreenProps) {
           <Text style={styles.muted}>{query.isLoading ? "Cargando…" : "No hay workspaces."}</Text>
         }
       />
-      <Modal title={`¿Archivar ${n} workspaces?`} open={confirmOpen} onOpenChange={setConfirmOpen}>
+      <Modal title={`Archive ${n} workspaces?`} open={confirmOpen} onOpenChange={setConfirmOpen}>
         <Modal.Content>
           <View style={styles.modalBody}>
             {selectedRows.map((r) => (
               <Text key={r.id} style={styles.text}>{`• ${r.label}`}</Text>
             ))}
             {riskyCount > 0 ? (
-              <Text style={styles.warning}>{`⚠ ${riskyCount} tienen un agente activo`}</Text>
+              <Text style={styles.warning}>{`⚠ ${riskyCount} have an active agent`}</Text>
             ) : null}
             <View style={styles.headerRow}>
               <Pressable
@@ -250,7 +250,7 @@ export function CleanupScreen({ theme, layout }: PluginScreenProps) {
                 style={styles.secondaryButton}
                 onPress={() => setConfirmOpen(false)}
               >
-                <Text style={styles.text}>Cancelar</Text>
+                <Text style={styles.text}>Cancel</Text>
               </Pressable>
               <Pressable
                 accessibilityRole="button"
@@ -258,7 +258,7 @@ export function CleanupScreen({ theme, layout }: PluginScreenProps) {
                 style={[styles.primaryButton, running || n === 0 ? styles.disabled : null]}
                 onPress={() => void runArchive()}
               >
-                <Text style={styles.primaryText}>Archivar</Text>
+                <Text style={styles.primaryText}>Archive</Text>
               </Pressable>
             </View>
           </View>

@@ -65,11 +65,11 @@ test("sortRows oldest-first puts null first, then ascending", () => {
 
 test("formatActivity buckets", () => {
   const now = 1_000_000_000;
-  assert.equal(formatActivity(null, now), "sin actividad");
-  assert.equal(formatActivity(now - 30_000, now), "recién");
-  assert.equal(formatActivity(now - 5 * 60_000, now), "hace 5 min");
-  assert.equal(formatActivity(now - 3 * 3_600_000, now), "hace 3 h");
-  assert.equal(formatActivity(now - 50 * 3_600_000, now), "hace 2 d");
+  assert.equal(formatActivity(null, now), "no activity");
+  assert.equal(formatActivity(now - 30_000, now), "just now");
+  assert.equal(formatActivity(now - 5 * 60_000, now), "5 min ago");
+  assert.equal(formatActivity(now - 3 * 3_600_000, now), "3 h ago");
+  assert.equal(formatActivity(now - 50 * 3_600_000, now), "2 d ago");
 });
 
 test("pruneSelection drops missing and archiving ids", () => {

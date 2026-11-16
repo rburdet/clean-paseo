@@ -13,8 +13,8 @@ function CleanupItem({ currentScreen, openScreen }: PluginSidebarItemProps) {
 }
 
 export default function contribute(client: PluginClientContext) {
-  const removeScreen = client.addScreen({ id: "cleanup", title: "Limpiar workspaces", Component: CleanupScreen });
-  const removeItem = client.addSidebarHeaderItem({ id: "cleanup", title: "Limpiar workspaces", Component: CleanupItem });
+  const removeScreen = client.addScreen({ id: "cleanup", title: "Clean up workspaces", Component: CleanupScreen });
+  const removeItem = client.addSidebarHeaderItem({ id: "cleanup", title: "Clean up workspaces", Component: CleanupItem });
   return () => {
     removeScreen();
     removeItem();
