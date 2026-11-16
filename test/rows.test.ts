@@ -81,3 +81,21 @@ test("dedupeById keeps first occurrence and order", () => {
   const out = dedupeById([{ id: "a", v: 1 }, { id: "b", v: 2 }, { id: "a", v: 3 }]);
   assert.deepEqual(out, [{ id: "a", v: 1 }, { id: "b", v: 2 }]);
 });
+
+test("toRow derives activity from the latest known timestamp", () => {
+  // Paseo 0.15.0 always sends activityAt: null in workspace lists.
+  const r = toRow(
+    input({
+      activityAt: null,
+      createdAt: "2026-01-01T00:00:00.000Z",
+      statusEnteredAt: "2026-01-03T00:00:00.000Z",
+      lastUserMessageAt: "2026-01-02T00:00:00.000Z",
+    }),
+  );
+  assert.equal(r.activityMs, Date.parse("2026-01-03T00:00:00.000Z"));
+});
+
+test("toRow falls back to createdAt and ignores garbage timestamps", () => {
+  const r = toRow(input({ createdAt: "2026-01-01T00:00:00.000Z", lastUserMessageAt: "garbage" }));
+  assert.equal(r.activityMs, Date.parse("2026-01-01T00:00:00.000Z"));
+});

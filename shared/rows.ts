@@ -7,6 +7,9 @@ export interface WorkspaceInput {
   projectDisplayName: string;
   status: WorkspaceStatus;
   activityAt: string | null;
+  lastUserMessageAt?: string | null;
+  statusEnteredAt?: string | null;
+  createdAt?: string;
   archivingAt?: string | null;
   diffStat?: { additions: number; deletions: number } | null;
 }
@@ -24,14 +27,25 @@ export interface WorkspaceRow {
 
 export type SortDirection = "oldest-first" | "newest-first";
 
+// Paseo 0.15.0 always sends activityAt: null in workspace lists, so take the
+// latest of every timestamp the daemon does fill in.
+function latestActivityMs(w: WorkspaceInput): number | null {
+  let latest: number | null = null;
+  for (const iso of [w.activityAt, w.lastUserMessageAt, w.statusEnteredAt, w.createdAt]) {
+    if (iso == null) continue;
+    const ms = Date.parse(iso);
+    if (!Number.isNaN(ms) && (latest === null || ms > latest)) latest = ms;
+  }
+  return latest;
+}
+
 export function toRow(w: WorkspaceInput): WorkspaceRow {
-  const parsed = w.activityAt == null ? Number.NaN : Date.parse(w.activityAt);
   return {
     id: w.id,
     label: w.title ? w.title : w.name,
     project: w.projectDisplayName,
     status: w.status,
-    activityMs: Number.isNaN(parsed) ? null : parsed,
+    activityMs: latestActivityMs(w),
     risky: w.status === "running" || w.status === "needs_input",
     archiving: w.archivingAt != null,
     diff: w.diffStat ?? null,
