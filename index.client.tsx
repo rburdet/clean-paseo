@@ -1,5 +1,19 @@
-import type { PluginClientContext } from "@getpaseo/plugin/client";
+import type { PluginClientContext, PluginSidebarItemProps } from "@getpaseo/plugin/client";
+import { SidebarRow } from "@getpaseo/plugin/client/ui";
+import { CleanupScreen } from "./client/cleanup-screen.tsx";
 
-export default function contribute(_client: PluginClientContext) {
+function CleanupItem({ currentScreen, openScreen }: PluginSidebarItemProps) {
+  return (
+    <SidebarRow
+      icon="Trash2"
+      active={currentScreen?.screenId === "cleanup"}
+      onPress={() => openScreen({ screenId: "cleanup" })}
+    />
+  );
+}
+
+export default function contribute(client: PluginClientContext) {
+  client.addScreen({ id: "cleanup", title: "Limpiar workspaces", Component: CleanupScreen });
+  client.addSidebarHeaderItem({ id: "cleanup", title: "Limpiar workspaces", Component: CleanupItem });
   return () => {};
 }
