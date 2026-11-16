@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  dedupeById,
   formatActivity,
   pruneSelection,
   sortRows,
@@ -74,4 +75,9 @@ test("formatActivity buckets", () => {
 test("pruneSelection drops missing and archiving ids", () => {
   const result = pruneSelection(new Set(["a", "b", "c"]), [row("a", 1), row("b", 2, true)]);
   assert.deepEqual([...result], ["a"]);
+});
+
+test("dedupeById keeps first occurrence and order", () => {
+  const out = dedupeById([{ id: "a", v: 1 }, { id: "b", v: 2 }, { id: "a", v: 3 }]);
+  assert.deepEqual(out, [{ id: "a", v: 1 }, { id: "b", v: 2 }]);
 });

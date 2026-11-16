@@ -7,7 +7,7 @@ import { Pressable, Text, View } from "react-native";
 import { archiveSequentially } from "../shared/bulk-archive.ts";
 import type { ArchiveProgress } from "../shared/bulk-archive.ts";
 import { fetchAllWorkspaces } from "../shared/fetch-all.ts";
-import { formatActivity, pruneSelection, sortRows, toRow } from "../shared/rows.ts";
+import { dedupeById, formatActivity, pruneSelection, sortRows, toRow } from "../shared/rows.ts";
 import type { SortDirection, WorkspaceRow } from "../shared/rows.ts";
 
 interface Failure {
@@ -24,6 +24,7 @@ export function CleanupScreen({ theme, layout }: PluginScreenProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [progress, setProgress] = useState<ArchiveProgress | null>(null);
   const [failures, setFailures] = useState<Failure[]>([]);
+  const [refreshFailed, setRefreshFailed] = useState(false);
   const runningRef = useRef(false);
 
   const query = useQuery({
@@ -31,9 +32,10 @@ export function CleanupScreen({ theme, layout }: PluginScreenProps) {
     queryFn: () => fetchAllWorkspaces((o) => paseo.workspaces.list(o)),
   });
 
-  const rows = useMemo(() => sortRows((query.data ?? []).map(toRow), dir), [query.data, dir]);
+  const rows = useMemo(() => sortRows(dedupeById((query.data ?? []).map(toRow)), dir), [query.data, dir]);
   const selectable = useMemo(() => rows.filter((r) => !r.archiving), [rows]);
   const selectedRows = useMemo(() => rows.filter((r) => selected.has(r.id) && !r.archiving), [rows, selected]);
+  const archivingCount = rows.length - selectable.length;
   const n = selectedRows.length;
   const running = progress !== null;
   const allSelected = selectable.length > 0 && n === selectable.length;
@@ -94,6 +96,7 @@ export function CleanupScreen({ theme, layout }: PluginScreenProps) {
     const targets = selectedRows;
     const labels = new Map(targets.map((r) => [r.id, r.label]));
     setFailures([]);
+    setRefreshFailed(false);
     setProgress({ done: 0, total: targets.length, currentId: null });
     try {
       const outcome = await archiveSequentially(
@@ -106,13 +109,24 @@ export function CleanupScreen({ theme, layout }: PluginScreenProps) {
         },
         setProgress,
       );
-      toast.show(`Archivados ${outcome.archived.length}`);
+      if (outcome.failed.length > 0) {
+        toast.show(`Archivados ${outcome.archived.length}, fallaron ${outcome.failed.length}`, {
+          variant: "warning",
+        });
+      } else {
+        toast.show(`Archivados ${outcome.archived.length}`);
+      }
       setFailures(
         outcome.failed.map((f) => ({ id: f.id, label: labels.get(f.id) ?? f.id, error: f.error })),
       );
       const refreshed = await query.refetch();
-      const fresh = (refreshed.data ?? []).map(toRow);
-      setSelected((s) => pruneSelection(s, fresh));
+      const fresh = dedupeById((refreshed.data ?? []).map(toRow));
+      setRefreshFailed(refreshed.isError);
+      setSelected((s) => {
+        const next = new Set(s);
+        outcome.archived.forEach((id) => next.delete(id));
+        return pruneSelection(next, fresh);
+      });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : String(err));
     } finally {
@@ -157,7 +171,9 @@ export function CleanupScreen({ theme, layout }: PluginScreenProps) {
   return (
     <View style={styles.screen}>
       <View style={styles.header}>
-        <Text style={styles.title}>{`${rows.length} workspaces activos`}</Text>
+        <Text style={styles.title}>
+          {`${selectable.length} workspaces activos${archivingCount > 0 ? ` (${archivingCount} archivando)` : ""}`}
+        </Text>
         <View style={styles.headerRow}>
           <Pressable
             accessibilityRole="button"
@@ -167,6 +183,14 @@ export function CleanupScreen({ theme, layout }: PluginScreenProps) {
             <Text style={styles.text}>
               {dir === "oldest-first" ? "Más viejos primero" : "Más recientes primero"}
             </Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            disabled={running}
+            style={[styles.secondaryButton, running ? styles.disabled : null]}
+            onPress={() => void query.refetch()}
+          >
+            <Text style={styles.text}>Refrescar</Text>
           </Pressable>
           <Pressable
             accessibilityRole="button"
@@ -192,6 +216,7 @@ export function CleanupScreen({ theme, layout }: PluginScreenProps) {
             {`No se pudo cargar: ${query.error instanceof Error ? query.error.message : String(query.error)}`}
           </Text>
         ) : null}
+        {refreshFailed ? <Text style={styles.danger}>No se pudo refrescar la lista</Text> : null}
         {failures.length > 0 ? (
           <View>
             <Text style={styles.danger}>{`No se pudieron archivar ${failures.length}:`}</Text>
